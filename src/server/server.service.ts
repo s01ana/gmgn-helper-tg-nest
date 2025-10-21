@@ -75,9 +75,7 @@ export class ServerService {
         const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, bscProvider);
 
         const balance = new BigNumber((await tokenContract.balanceOf(devAddress)).toString()).div(10 ** 18);
-        console.log('balance: ', balance.toString());
-        console.log('creatorAmount: ', creatorAmount);
-        if (balance.lt(creatorAmount) || balance.lte(1)) {
+        if (balance.plus(1).lt(creatorAmount) || balance.lte(1)) {
           // sendMessage(chatId, `❌ Creator balance is insufficient. Please add more balance to your wallet.`);
           return { status: false, message: 'Dev Sold already!' };
         } 
