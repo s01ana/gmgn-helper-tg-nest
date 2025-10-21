@@ -20,7 +20,9 @@ export const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, {
   webHook: true,
 });
 
-bot.setWebHook(`https://gmgnhelper.lcd.finance//bot${TELEGRAM_BOT_TOKEN}`)
+export const BACKEND_URL = process.env.BACKEND_URL as string;
+
+bot.setWebHook(`${BACKEND_URL}/bot${TELEGRAM_BOT_TOKEN}`)
 
 export const V3_CONTRACT_ADDRESS = "0xF251F83e40a78868FcfA3FA4599Dad6494E46034";
 export const V2_CONTRACT_ADDRESS = "0x5c952063c7fc8610FFDB798152D69F0B9550762b";

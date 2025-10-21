@@ -18,6 +18,8 @@ const sellToken_ = async (privateKey: string, order: any) => {
       return null;
     }
 
+    console.log(`[SellToken]: balance: ${balance.toString()}, sellOrder: ${wallet.address} ${order.tokenAddress}`);
+
     tx = await v2Contract.sellToken(order.tokenAddress, balance);
     await tx.wait();
     sendMessage(order.chatId, `📉 Sold ${(balance / BigInt(10 ** 18)).toString()} ${order.tokenName} (${order.tokenSymbol}) successfully\nCA: <code>${order.tokenAddress}</code>\n` +

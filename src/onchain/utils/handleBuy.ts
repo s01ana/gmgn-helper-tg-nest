@@ -4,7 +4,6 @@ import { Order } from "../../schema/order.schema.js";
 import { Setting } from "../../schema/setting.schema.js";
 import { Subscription } from "../../schema/subscription.schema.js";
 import sendMessage from "../../telegram/utils/sendMessage.js";
-import { SubscriptionContext } from "../../context/index.js";
 
 import buyToken from "./buy.js";
 
@@ -12,8 +11,7 @@ const handleBuy = async (
   OrderModel: Model<Order>,
   SettingModel: Model<Setting>,
   SubscriptionModel: Model<Subscription>,
-  subscription: any, 
-  amount: bigint
+  subscription: any
 ) => {
   const orders = await OrderModel.find({
     tokenAddress: subscription.tokenAddress,
@@ -40,7 +38,7 @@ const handleBuy = async (
     }
 
     if (order.orderType === "devSell") {
-      if (amount > BigInt(order.creatorAmount * setting.devSellRate / 100 * 10**18)) {
+      if (subscription.devSellAmount >= Math.floor(order.creatorAmount) * setting.devSellRate / 100) {
         // buy token
         const tx = await buyToken(setting.key, subscription.tokenAddress, setting.buyAmount, order.chatId);
 
@@ -60,21 +58,13 @@ const handleBuy = async (
 
         const similarOrders = await OrderModel.find({ tokenAddress: subscription.tokenAddress, devAddress: subscription.devAddress, isBought: false });
         if (similarOrders.length == 0) {
-          await SubscriptionModel.deleteOne({ 
-            tokenAddress: subscription.tokenAddress, 
-            devAddress: subscription.devAddress 
-          });
-          SubscriptionContext.splice(SubscriptionContext.findIndex(
-            subscription => 
-              subscription.tokenAddress === subscription.tokenAddress && 
-              subscription.devAddress === subscription.devAddress
-          ), 1);
+          await SubscriptionModel.deleteMany({ tokenAddress: subscription.tokenAddress, devAddress: subscription.devAddress });
         }
       } else {
         console.info(`[handleBuy]: no dev sell, user: ${setting.userName}`);
       }
     } else if (order.orderType === "lastSell") {
-      if (amount > BigInt(order.creatorAmount * 10**18)) {
+      if (subscription.devSellAmount >= Math.floor(order.creatorAmount)) {
         // buy token
         const tx = await buyToken(setting.key, subscription.tokenAddress, setting.buyAmount, order.chatId);
 
@@ -94,15 +84,7 @@ const handleBuy = async (
 
         const similarOrders = await OrderModel.find({ tokenAddress: subscription.tokenAddress, devAddress: subscription.devAddress, isBought: false });
         if (similarOrders.length == 0) {
-          await SubscriptionModel.deleteOne({ 
-            tokenAddress: subscription.tokenAddress, 
-            devAddress: subscription.devAddress 
-          });
-          SubscriptionContext.splice(SubscriptionContext.findIndex(
-            subscription => 
-              subscription.tokenAddress === subscription.tokenAddress && 
-              subscription.devAddress === subscription.devAddress
-          ), 1);
+          await SubscriptionModel.deleteMany({ tokenAddress: subscription.tokenAddress, devAddress: subscription.devAddress });
         }
       } else {
         console.info(`[handleBuy]: no last sell, user: ${setting.userName}`);

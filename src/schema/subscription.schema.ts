@@ -8,6 +8,9 @@ export class Subscription {
 
   @Prop({ type: String })
   devAddress: string;
+
+  @Prop({ type: Number })
+  devSellAmount: number;
 }
 
 export type SubscriptionDocument = Subscription & Document;

@@ -62,9 +62,9 @@ export class TelegramService {
     }
   }
 
-  public async startTelegramBot() {
+  public startTelegramBot() {
     console.log('================startTelegramBot====================');
-    await bot.setMyCommands([
+    bot.setMyCommands([
       { command: 'start', description: 'Start the bot' },
       { command: 'wallet', description: 'Show your wallet'},
       { command: 'orders', description: 'Show your orders'}

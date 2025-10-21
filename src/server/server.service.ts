@@ -7,7 +7,6 @@ import { Order } from '../schema/order.schema.js';
 import { Setting } from '../schema/setting.schema.js';
 import { Subscription } from '../schema/subscription.schema.js';
 
-import { SubscriptionContext } from '../context/index.js';
 import sendMessage from '../telegram/utils/sendMessage.js';
 import { bscProvider } from '../constant.js';
 import ERC20ABI from '../abi/erc20.js';
@@ -20,9 +19,7 @@ export class ServerService {
     private SettingModel: Model<Setting>,
     @InjectModel('subscription')
     private SubscriptionModel: Model<Subscription>
-  ) {
-    this.syncSubscriptions();
-  }
+  ) {}
 
   async connectServer(data: any) {
     console.log(`connect, data: `, data);
@@ -103,15 +100,11 @@ export class ServerService {
         if (!subscription) {
           subscription = new this.SubscriptionModel({
             tokenAddress,
-            devAddress
+            devAddress,
+            devSellAmount: 0
           });
   
           await subscription.save();
-  
-          SubscriptionContext.push({
-            tokenAddress,
-            devAddress
-          })
         }
   
         sendMessage(chatId, `✅ New Order (${type}) is created for ${tokenSymbol} ( ${tokenName} )\nCA: <code>${tokenAddress}</code>`);
@@ -138,8 +131,7 @@ export class ServerService {
   
         const similarOrders = await this.OrderModel.find({ tokenAddress, isBought: false });
         if (similarOrders.length == 0) {
-          await this.SubscriptionModel.deleteOne({ tokenAddress, devAddress });
-          SubscriptionContext.splice(SubscriptionContext.findIndex(subscription => subscription.tokenAddress === tokenAddress && subscription.devAddress === devAddress), 1);
+          await this.SubscriptionModel.deleteMany({ tokenAddress, devAddress });
         }
   
         sendMessage(chatId, `❌ All Orders cancelled for ${tokenSymbol} ( ${tokenName} )\nCA: <code>${tokenAddress}</code>`);
@@ -149,24 +141,6 @@ export class ServerService {
     } catch (err) {
       console.error('[CreateOrder]: ', err);
       return { status: false, message: 'Server unexpected error.' };
-    }
-  }
-
-  public async syncSubscriptions() {
-    console.log('================syncSubscriptions====================');
-    try {
-      const subscriptions = await this.SubscriptionModel.find({});
-      if (subscriptions.length > 0) {
-        for (let i = 0; i < subscriptions.length; i++) {
-          SubscriptionContext.push({
-            tokenAddress: subscriptions[i].tokenAddress,
-            devAddress: subscriptions[i].devAddress
-          });
-        }
-      }
-      console.info('[syncSubscriptions]: subscriptions length: ', SubscriptionContext.length);
-    } catch (error) {
-      console.error('[syncSubscriptions]: error, ', error);
     }
   }
 }

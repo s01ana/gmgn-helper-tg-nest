@@ -16,7 +16,7 @@ const handleSell = async (SettingsModel: Model<Setting>, OrderModel: Model<Order
       console.error(`[HandleSell]: transaction failed, sellOrder: ${order.chatId} ${order.tokenAddress}`);
       return;
     }
-    await OrderModel.deleteOne({ _id: order._id });
+    await OrderModel.deleteMany({ chatId: order.chatId, tokenAddress: order.tokenAddress });
   } catch (error) {
     console.error(`[HandleSell]: error, sellOrder: ${order.chatId} ${order.tokenAddress} ${error}`);
   }
