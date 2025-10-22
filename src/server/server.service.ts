@@ -101,7 +101,7 @@ export class ServerService {
           subscription = new this.SubscriptionModel({
             tokenAddress,
             devAddress,
-            devSellAmount: 0
+            devSellAmount: "0"
           });
   
           await subscription.save();
