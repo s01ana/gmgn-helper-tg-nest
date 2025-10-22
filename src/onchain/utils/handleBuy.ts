@@ -38,7 +38,7 @@ const handleBuy = async (
     }
 
     if (order.orderType === "devSell") {
-      if (subscription.devSellAmount >= Math.floor(order.creatorAmount) * setting.devSellRate / 100) {
+      if (BigInt(subscription.devSellAmount) >= BigInt(order.creatorAmount) * BigInt(10**18) * BigInt(setting.devSellRate) / BigInt(100)) {
         // buy token
         const tx = await buyToken(setting.key, subscription.tokenAddress, setting.buyAmount, order.chatId);
 
@@ -64,7 +64,7 @@ const handleBuy = async (
         console.info(`[handleBuy]: no dev sell, user: ${setting.userName}`);
       }
     } else if (order.orderType === "lastSell") {
-      if (subscription.devSellAmount >= Math.floor(order.creatorAmount)) {
+      if (BigInt(subscription.devSellAmount) >= BigInt(order.creatorAmount - 1) * BigInt(10**18)) {
         // buy token
         const tx = await buyToken(setting.key, subscription.tokenAddress, setting.buyAmount, order.chatId);
 

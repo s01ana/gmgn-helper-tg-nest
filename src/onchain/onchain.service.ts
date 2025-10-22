@@ -12,6 +12,7 @@ import handleSell from './utils/handleSell.js';
 import { V2_CONTRACT_ADDRESS, bscProvider } from '../constant.js';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import ERC20ABI from '../abi/erc20.js';
+import { BotContext } from '../context/index.js';
 
 export class OnchainService {
   constructor(
@@ -47,11 +48,13 @@ export class OnchainService {
           devAddress: devAddress.toLowerCase()
         });
         if (subscription) {
+          BotContext.set("Listener", "detected");
           console.log('[Listener]: Listened dev sell event for ', subscription.tokenAddress);
-          subscription.devSellAmount += Number(amount / BigInt(10**18));
+          subscription.devSellAmount = (BigInt(subscription.devSellAmount) + amount).toString();
           await subscription.save();
           console.log('[Listener]: devSellAmount: ', subscription.devSellAmount);
           await handleBuy(this.OrderModel, this.SettingModel, this.SubscriptionModel, subscription);
+          BotContext.set("Listener", "handled");
         }
       })
     } catch (error) {
@@ -69,11 +72,15 @@ export class OnchainService {
       }
     } catch (error) {
       console.error('[handleSellsCron]: ', error);
-    } 
+    }
   }
 
   @Cron('*/10 * * * *')
   async handleSubscriptionsCron() {
+    if (BotContext.get("Listener") && BotContext.get("Listener") === "detected") {
+      console.log('[handleSubscriptionsCron]: a token already detected, so skip');
+      return;
+    }
     try {
       const subscriptions = await this.SubscriptionModel.find({});
       console.info(`[handleSubscriptionsCron]: subscriptions length: ${subscriptions.length}`);
@@ -81,7 +88,6 @@ export class OnchainService {
         for (let i = 0; i < subscriptions.length; i++) {
           const devAddress = subscriptions[i].devAddress;
           const tokenAddress = subscriptions[i].tokenAddress;
-
           const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, bscProvider);
           const balance = await tokenContract.balanceOf(devAddress);
 

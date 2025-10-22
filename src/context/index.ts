@@ -1,0 +1,1 @@
+export const BotContext = new Map<string, any>();
